@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using PiperSharp;
 using PiperSharp.Models;
+using System.Runtime.InteropServices;
 using WordWhisperer.Core.Data;
 using WordWhisperer.Core.Data.Models;
 using WordWhisperer.Core.Interfaces;
@@ -25,7 +26,7 @@ public class PronunciationService : IPronunciationService, IDisposable
     {
         _db = db;
         _audioCachePath = configuration["AudioCachePath"] ?? "AudioCache";
-        _piperPath = Path.Combine(_audioCachePath, "piper");
+        _piperPath = _audioCachePath; // Don't create an extra piper subdirectory
         Directory.CreateDirectory(_audioCachePath);
     }
 
@@ -34,13 +35,17 @@ public class PronunciationService : IPronunciationService, IDisposable
         if (_piper == null)
         {
             // Download and extract Piper if needed
-            await PiperDownloader.DownloadPiper().ExtractPiper(_piperPath);
+            var piperZip = PiperDownloader.DownloadPiper();
+            await piperZip.ExtractPiper(_piperPath);
             
-            // Create provider
+            // Get the correct executable name based on platform
+            string exeName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "piper.exe" : "piper";
+            
+            // Create provider with paths that account for PiperSharp's piper subdirectory
             _piper = new PiperProvider(new PiperConfiguration
             {
-                ExecutableLocation = Path.Combine(_piperPath, "piper.exe"),
-                WorkingDirectory = _piperPath
+                ExecutableLocation = Path.Combine(_piperPath, "piper", exeName),
+                WorkingDirectory = Path.Combine(_piperPath, "piper")
             });
         }
 
@@ -84,36 +89,46 @@ public class PronunciationService : IPronunciationService, IDisposable
             var wordEntry = await _db.Words
                 .FirstOrDefaultAsync(w => w.WordText.ToLower() == word.ToLower());
 
-            if (wordEntry != null)
+            if (wordEntry == null)
             {
-                if (accent == "american") // Default accent
+                // Create new word entry if it doesn't exist
+                wordEntry = new Word
                 {
-                    wordEntry.AudioPath = filePath;
-                }
-                else
-                {
-                    var variant = await _db.WordVariants
-                        .FirstOrDefaultAsync(v => v.WordId == wordEntry.Id && v.Variant == accent);
-
-                    if (variant == null)
-                    {
-                        variant = new WordVariant
-                        {
-                            WordId = wordEntry.Id,
-                            Variant = accent,
-                            AudioPath = filePath
-                        };
-                        _db.WordVariants.Add(variant);
-                    }
-                    else
-                    {
-                        variant.AudioPath = filePath;
-                    }
-                }
-
+                    WordText = word,
+                    AudioPath = accent == "american" ? filePath : null,
+                    CreatedAt = DateTime.UtcNow,
+                    LastAccessedAt = DateTime.UtcNow
+                };
+                _db.Words.Add(wordEntry);
                 await _db.SaveChangesAsync();
             }
 
+            if (accent == "american") // Default accent
+            {
+                wordEntry.AudioPath = filePath;
+            }
+            else
+            {
+                var variant = await _db.WordVariants
+                    .FirstOrDefaultAsync(v => v.WordId == wordEntry.Id && v.Variant == accent);
+
+                if (variant == null)
+                {
+                    variant = new WordVariant
+                    {
+                        WordId = wordEntry.Id,
+                        Variant = accent,
+                        AudioPath = filePath
+                    };
+                    _db.WordVariants.Add(variant);
+                }
+                else
+                {
+                    variant.AudioPath = filePath;
+                }
+            }
+
+            await _db.SaveChangesAsync();
             return filePath;
         }
         catch (Exception)
