@@ -11,7 +11,10 @@ builder.Services.AddSwaggerGen();
 
 // Configure SQLite
 builder.Services.AddDbContext<DatabaseContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=pronunciation.db"));
+    options.UseSqlite(
+        builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=pronunciation.db",
+        b => b.MigrationsAssembly("WordWhisperer.Api")
+    ));
 
 var app = builder.Build();
 

@@ -24,21 +24,21 @@ public class DatabaseContext : DbContext
         modelBuilder.Entity<Setting>()
             .HasKey(s => s.Key);
 
-        // Relationship mappings
-        modelBuilder.Entity<WordVariant>()
-            .HasOne(wv => wv.Word)
-            .WithMany()
+        // Word relationships
+        modelBuilder.Entity<Word>()
+            .HasMany(w => w.Variants)
+            .WithOne(wv => wv.Word)
             .HasForeignKey(wv => wv.WordId);
 
-        modelBuilder.Entity<Favorite>()
-            .HasOne(f => f.Word)
-            .WithMany()
-            .HasForeignKey(f => f.WordId);
-
-        modelBuilder.Entity<History>()
-            .HasOne(h => h.Word)
-            .WithMany()
+        modelBuilder.Entity<Word>()
+            .HasMany(w => w.History)
+            .WithOne(h => h.Word)
             .HasForeignKey(h => h.WordId);
+
+        modelBuilder.Entity<Word>()
+            .HasMany(w => w.Favorites)
+            .WithOne(f => f.Word)
+            .HasForeignKey(f => f.WordId);
 
         // Configure indexes
         modelBuilder.Entity<Word>()
