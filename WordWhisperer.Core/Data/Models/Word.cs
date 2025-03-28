@@ -29,9 +29,9 @@ public class Word
     public int AccessCount { get; set; }
 
     // Navigation properties
-    public ICollection<WordVariant> Variants { get; set; } = new List<WordVariant>();
+    public ICollection<WordVariant> Variants { get; set; } = [];
 
-    public ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
+    public ICollection<Favorite> Favorites { get; set; } = [];
 
-    public ICollection<History> History { get; set; } = new List<History>();
+    public ICollection<History> History { get; set; } = [];
 }

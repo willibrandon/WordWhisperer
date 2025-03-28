@@ -9,7 +9,7 @@ public class DictionaryService(DatabaseContext db) : IDictionaryService
     public async Task<string?> GetDefinitionAsync(string word)
     {
         var wordEntry = await db.Words
-            .FirstOrDefaultAsync(w => w.WordText.ToLower() == word.ToLower());
+            .FirstOrDefaultAsync(w => w.WordText.Equals(word, StringComparison.CurrentCultureIgnoreCase));
 
         return wordEntry?.Definition;
     }
@@ -17,7 +17,7 @@ public class DictionaryService(DatabaseContext db) : IDictionaryService
     public async Task<string?> GetPartOfSpeechAsync(string word)
     {
         var wordEntry = await db.Words
-            .FirstOrDefaultAsync(w => w.WordText.ToLower() == word.ToLower());
+            .FirstOrDefaultAsync(w => w.WordText.Equals(word, StringComparison.CurrentCultureIgnoreCase));
 
         return wordEntry?.PartOfSpeech;
     }
@@ -25,7 +25,7 @@ public class DictionaryService(DatabaseContext db) : IDictionaryService
     public async Task<(string? definition, string? partOfSpeech)> GetWordInfoAsync(string word)
     {
         var wordEntry = await db.Words
-            .FirstOrDefaultAsync(w => w.WordText.ToLower() == word.ToLower());
+            .FirstOrDefaultAsync(w => w.WordText.Equals(word, StringComparison.CurrentCultureIgnoreCase));
 
         return (wordEntry?.Definition, wordEntry?.PartOfSpeech);
     }

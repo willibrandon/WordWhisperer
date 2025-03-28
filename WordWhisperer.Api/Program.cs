@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using WordWhisperer.Core.Data;
+using WordWhisperer.Core.Interfaces;
+using WordWhisperer.Core.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +18,22 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
         b => b.MigrationsAssembly("WordWhisperer.Api")
     ));
 
+// Register services
+builder.Services.AddScoped<IPronunciationService, PronunciationService>();
+builder.Services.AddScoped<IPhoneticService, PhoneticService>();
+builder.Services.AddScoped<IDictionaryService, DictionaryService>();
+
+// Register the PhoneticDictionaryService as a singleton since it maintains dictionary state
+builder.Services.AddSingleton<PhoneticDictionaryService>();
+
 var app = builder.Build();
+
+// Initialize the phonetic dictionary
+using (var scope = app.Services.CreateScope())
+{
+    var dictionaryService = scope.ServiceProvider.GetRequiredService<PhoneticDictionaryService>();
+    await dictionaryService.InitializeAsync();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

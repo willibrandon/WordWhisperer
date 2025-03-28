@@ -16,4 +16,10 @@
     <PackageReference Include="PiperSharp" Version="1.0.5" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="Data\PhoneticDictionary.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

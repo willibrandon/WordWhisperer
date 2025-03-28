@@ -87,7 +87,7 @@ public class PronunciationService : IPronunciationService, IDisposable
 
             // Update database with new audio path
             var wordEntry = await _db.Words
-                .FirstOrDefaultAsync(w => w.WordText.ToLower() == word.ToLower());
+                .FirstOrDefaultAsync(w => w.WordText.Equals(word, StringComparison.CurrentCultureIgnoreCase));
 
             if (wordEntry == null)
             {
@@ -151,7 +151,7 @@ public class PronunciationService : IPronunciationService, IDisposable
     {
         var wordEntry = await _db.Words
             .Include(w => w.Variants)
-            .FirstOrDefaultAsync(w => w.WordText.ToLower() == word.ToLower());
+            .FirstOrDefaultAsync(w => w.WordText.Equals(word, StringComparison.CurrentCultureIgnoreCase));
 
         if (wordEntry == null)
             return null;
@@ -163,7 +163,7 @@ public class PronunciationService : IPronunciationService, IDisposable
         return variant?.AudioPath;
     }
 
-    private string GetAudioFileName(string word, string accent, bool slow)
+    private static string GetAudioFileName(string word, string accent, bool slow)
     {
         var speedSuffix = slow ? "_slow" : "";
         return $"{word}_{accent}{speedSuffix}.wav";

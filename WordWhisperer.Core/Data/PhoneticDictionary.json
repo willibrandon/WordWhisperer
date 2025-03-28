@@ -1,0 +1,130 @@
+{
+    "version": "1.0",
+    "source": "Custom English Phonetic Dictionary",
+    "entries": {
+        "hello": {
+            "ipa": "həˈloʊ",
+            "simplified": "huh-LOW",
+            "syllables": ["hə", "loʊ"],
+            "stress": [2],
+            "variants": {
+                "british": {
+                    "ipa": "həˈləʊ",
+                    "simplified": "huh-LOW",
+                    "syllables": ["hə", "ləʊ"],
+                    "stress": [2]
+                }
+            }
+        },
+        "world": {
+            "ipa": "wɝld",
+            "simplified": "wurld",
+            "syllables": ["wɝld"],
+            "stress": [1],
+            "variants": {
+                "british": {
+                    "ipa": "wɜːld",
+                    "simplified": "wurld",
+                    "syllables": ["wɜːld"],
+                    "stress": [1]
+                }
+            }
+        },
+        "tomato": {
+            "ipa": "təˈmeɪtoʊ",
+            "simplified": "tuh-MAY-toh",
+            "syllables": ["tə", "meɪ", "toʊ"],
+            "stress": [2],
+            "variants": {
+                "british": {
+                    "ipa": "təˈmɑːtəʊ",
+                    "simplified": "tuh-MAH-toh",
+                    "syllables": ["tə", "mɑː", "təʊ"],
+                    "stress": [2]
+                }
+            }
+        }
+    },
+    "rules": {
+        "consonants": {
+            "th": {
+                "voiced": "ð",
+                "unvoiced": "θ",
+                "simplified": "th"
+            },
+            "ch": {
+                "default": "tʃ",
+                "simplified": "ch"
+            },
+            "sh": {
+                "default": "ʃ",
+                "simplified": "sh"
+            },
+            "ng": {
+                "default": "ŋ",
+                "simplified": "ng"
+            }
+        },
+        "vowels": {
+            "a": {
+                "default": "æ",
+                "simplified": "a",
+                "contexts": {
+                    "silent_e": "eɪ",
+                    "before_r": "ɑr"
+                }
+            },
+            "e": {
+                "default": "ɛ",
+                "simplified": "e",
+                "contexts": {
+                    "end_word": "",
+                    "ee": "iː"
+                }
+            },
+            "i": {
+                "default": "ɪ",
+                "simplified": "i",
+                "contexts": {
+                    "silent_e": "aɪ",
+                    "before_r": "ɜr"
+                }
+            },
+            "o": {
+                "default": "ɑ",
+                "simplified": "o",
+                "contexts": {
+                    "silent_e": "oʊ",
+                    "before_r": "ɔr"
+                }
+            },
+            "u": {
+                "default": "ʌ",
+                "simplified": "u",
+                "contexts": {
+                    "silent_e": "uː",
+                    "before_r": "ɜr"
+                }
+            }
+        },
+        "syllable_patterns": {
+            "CVC": {
+                "stress": 1,
+                "description": "Consonant-Vowel-Consonant"
+            },
+            "CV": {
+                "stress": 1,
+                "description": "Consonant-Vowel"
+            },
+            "VC": {
+                "stress": 1,
+                "description": "Vowel-Consonant"
+            }
+        },
+        "stress_patterns": {
+            "noun_two_syllable": [1, 0],
+            "verb_two_syllable": [0, 1],
+            "three_syllable": [1, 0, 0]
+        }
+    }
+} 

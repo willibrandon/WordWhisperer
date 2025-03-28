@@ -136,5 +136,7 @@ public class PronunciationServiceTests : IDisposable
         {
             Directory.Delete(_testDir, true);
         }
+
+        GC.SuppressFinalize(this);
     }
 } 
