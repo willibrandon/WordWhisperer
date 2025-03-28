@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using System.Speech.Synthesis;
+using PiperSharp;
+using PiperSharp.Models;
 using WordWhisperer.Core.Data;
 using WordWhisperer.Core.Data.Models;
 using WordWhisperer.Core.Interfaces;
@@ -11,19 +12,50 @@ public class PronunciationService : IPronunciationService, IDisposable
 {
     private readonly DatabaseContext _db;
     private readonly string _audioCachePath;
-    private readonly SpeechSynthesizer _synthesizer;
+    private readonly string _piperPath;
+    private PiperProvider? _piper;
+    private VoiceModel? _currentModel;
+    private readonly Dictionary<string, string> _accentToModelKey = new()
+    {
+        ["american"] = "en_US-lessac-medium",
+        ["british"] = "en_GB-alba-medium"
+    };
 
     public PronunciationService(DatabaseContext db, IConfiguration configuration)
     {
         _db = db;
         _audioCachePath = configuration["AudioCachePath"] ?? "AudioCache";
+        _piperPath = Path.Combine(_audioCachePath, "piper");
         Directory.CreateDirectory(_audioCachePath);
+    }
 
-        _synthesizer = new SpeechSynthesizer();
+    private async Task EnsureInitializedAsync(string accent)
+    {
+        if (_piper == null)
+        {
+            // Download and extract Piper if needed
+            await PiperDownloader.DownloadPiper().ExtractPiper(_piperPath);
+            
+            // Create provider
+            _piper = new PiperProvider(new PiperConfiguration
+            {
+                ExecutableLocation = Path.Combine(_piperPath, "piper.exe"),
+                WorkingDirectory = _piperPath
+            });
+        }
 
-        // Configure default voice settings
-        _synthesizer.Rate = 0; // Normal speed
-        _synthesizer.Volume = 100;
+        // Get the model key for the accent
+        if (!_accentToModelKey.TryGetValue(accent, out var modelKey))
+        {
+            throw new ArgumentException($"Unsupported accent: {accent}");
+        }
+
+        // Download and load the model if needed
+        if (_currentModel?.Key != modelKey)
+        {
+            _currentModel = await PiperDownloader.DownloadModelByKey(modelKey);
+            _piper.Configuration.Model = _currentModel;
+        }
     }
 
     public async Task<string?> GetOrGenerateAudioAsync(string word, string accent, bool slow)
@@ -39,14 +71,14 @@ public class PronunciationService : IPronunciationService, IDisposable
         var fileName = GetAudioFileName(word, accent, slow);
         var filePath = Path.Combine(_audioCachePath, fileName);
 
-        // Adjust speed if needed
-        _synthesizer.Rate = slow ? -2 : 0;
+        // Initialize Piper with the correct model
+        await EnsureInitializedAsync(accent);
 
-        // Generate and save audio
         try
         {
-            _synthesizer.SetOutputToWaveFile(filePath);
-            _synthesizer.Speak(word);
+            // Generate audio using Piper
+            var audioData = await _piper!.InferAsync(word, AudioOutputType.Wav);
+            await File.WriteAllBytesAsync(filePath, audioData);
 
             // Update database with new audio path
             var wordEntry = await _db.Words
@@ -84,9 +116,13 @@ public class PronunciationService : IPronunciationService, IDisposable
 
             return filePath;
         }
-        finally
+        catch (Exception)
         {
-            _synthesizer.SetOutputToNull();
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }
+            throw;
         }
     }
 
@@ -120,7 +156,6 @@ public class PronunciationService : IPronunciationService, IDisposable
 
     public void Dispose()
     {
-        _synthesizer.Dispose();
         GC.SuppressFinalize(this);
     }
 }
