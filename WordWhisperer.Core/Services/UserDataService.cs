@@ -5,15 +5,8 @@ using WordWhisperer.Core.Interfaces;
 
 namespace WordWhisperer.Core.Services;
 
-public class UserDataService : IUserDataService
+public class UserDataService(DatabaseContext db) : IUserDataService
 {
-    private readonly DatabaseContext _db;
-
-    public UserDataService(DatabaseContext db)
-    {
-        _db = db;
-    }
-
     public async Task AddToHistoryAsync(int wordId, string accentUsed)
     {
         var entry = new History
@@ -22,13 +15,14 @@ public class UserDataService : IUserDataService
             AccentUsed = accentUsed,
             Timestamp = DateTime.UtcNow
         };
-        _db.History.Add(entry);
-        await _db.SaveChangesAsync();
+
+        db.History.Add(entry);
+        await db.SaveChangesAsync();
     }
 
     public async Task<List<History>> GetHistoryAsync(int limit = 50)
     {
-        return await _db.History
+        return await db.History
             .Include(h => h.Word)
             .OrderByDescending(h => h.Timestamp)
             .Take(limit)
@@ -44,23 +38,25 @@ public class UserDataService : IUserDataService
             Tags = tags,
             AddedAt = DateTime.UtcNow
         };
-        _db.Favorites.Add(favorite);
-        await _db.SaveChangesAsync();
+
+        db.Favorites.Add(favorite);
+        await db.SaveChangesAsync();
     }
 
     public async Task<List<Favorite>> GetFavoritesAsync(string? tag = null)
     {
-        var query = _db.Favorites.Include(f => f.Word).AsQueryable();
+        var query = db.Favorites.Include(f => f.Word).AsQueryable();
         if (!string.IsNullOrEmpty(tag))
         {
             query = query.Where(f => f.Tags != null && f.Tags.Contains(tag));
         }
+
         return await query.ToListAsync();
     }
 
     public async Task UpdateSettingAsync(string key, string value)
     {
-        var setting = await _db.Settings.FindAsync(key);
+        var setting = await db.Settings.FindAsync(key);
         if (setting == null)
         {
             setting = new Setting
@@ -68,18 +64,19 @@ public class UserDataService : IUserDataService
                 Key = key,
                 Value = value
             };
-            _db.Settings.Add(setting);
+            db.Settings.Add(setting);
         }
         else
         {
             setting.Value = value;
         }
-        await _db.SaveChangesAsync();
+
+        await db.SaveChangesAsync();
     }
 
     public async Task<string?> GetSettingAsync(string key)
     {
-        var setting = await _db.Settings.FindAsync(key);
+        var setting = await db.Settings.FindAsync(key);
         return setting?.Value;
     }
-} 
+}

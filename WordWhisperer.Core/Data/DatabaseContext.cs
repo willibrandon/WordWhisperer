@@ -3,18 +3,17 @@ using WordWhisperer.Core.Data.Models;
 
 namespace WordWhisperer.Core.Data;
 
-public class DatabaseContext : DbContext
+public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbContext(options)
 {
     public DbSet<Word> Words { get; set; } = null!;
-    public DbSet<WordVariant> WordVariants { get; set; } = null!;
-    public DbSet<Favorite> Favorites { get; set; } = null!;
-    public DbSet<History> History { get; set; } = null!;
-    public DbSet<Setting> Settings { get; set; } = null!;
 
-    public DatabaseContext(DbContextOptions<DatabaseContext> options)
-        : base(options)
-    {
-    }
+    public DbSet<WordVariant> WordVariants { get; set; } = null!;
+
+    public DbSet<Favorite> Favorites { get; set; } = null!;
+
+    public DbSet<History> History { get; set; } = null!;
+
+    public DbSet<Setting> Settings { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -51,4 +50,4 @@ public class DatabaseContext : DbContext
         modelBuilder.Entity<Favorite>()
             .HasIndex(f => f.AddedAt);
     }
-} 
+}
