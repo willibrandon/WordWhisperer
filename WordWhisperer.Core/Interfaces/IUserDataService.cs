@@ -10,5 +10,4 @@ public interface IUserDataService
     Task<List<Favorite>> GetFavoritesAsync(string? tag = null);
     Task UpdateSettingAsync(string key, string value);
     Task<string?> GetSettingAsync(string key);
-    Task<Dictionary<string, string>> GetAllSettingsAsync();
 } 

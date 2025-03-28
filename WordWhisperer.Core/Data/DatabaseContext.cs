@@ -20,24 +20,24 @@ public class DatabaseContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Configure Setting entity
+        // Setting uses Key as primary key
         modelBuilder.Entity<Setting>()
             .HasKey(s => s.Key);
 
-        // Configure Word relationships
-        modelBuilder.Entity<Word>()
-            .HasMany(w => w.Variants)
-            .WithOne(wv => wv.Word)
+        // Relationship mappings
+        modelBuilder.Entity<WordVariant>()
+            .HasOne(wv => wv.Word)
+            .WithMany()
             .HasForeignKey(wv => wv.WordId);
 
-        modelBuilder.Entity<Word>()
-            .HasMany(w => w.Favorites)
-            .WithOne(f => f.Word)
+        modelBuilder.Entity<Favorite>()
+            .HasOne(f => f.Word)
+            .WithMany()
             .HasForeignKey(f => f.WordId);
 
-        modelBuilder.Entity<Word>()
-            .HasMany(w => w.History)
-            .WithOne(h => h.Word)
+        modelBuilder.Entity<History>()
+            .HasOne(h => h.Word)
+            .WithMany()
             .HasForeignKey(h => h.WordId);
 
         // Configure indexes
