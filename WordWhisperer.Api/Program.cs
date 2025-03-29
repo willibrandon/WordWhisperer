@@ -56,6 +56,20 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
     context.Database.EnsureCreated();
+
+    // Initialize default settings if none exist
+    if (!await context.Settings.AnyAsync())
+    {
+        var defaultSettings = new[]
+        {
+            new Setting { Key = "DefaultAccent", Value = "american", Description = "Default accent for pronunciation" },
+            new Setting { Key = "DefaultSpeed", Value = "normal", Description = "Default speed for pronunciation (normal/slow)" },
+            new Setting { Key = "AudioQuality", Value = "high", Description = "Audio quality setting (low/medium/high)" },
+            new Setting { Key = "PhoneticNotation", Value = "both", Description = "Phonetic notation to display (ipa/simplified/both)" }
+        };
+        context.Settings.AddRange(defaultSettings);
+        await context.SaveChangesAsync();
+    }
 }
 
 // Word pronunciation endpoints
