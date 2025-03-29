@@ -13,6 +13,18 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Enable CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp", policy =>
+    {
+        policy.WithOrigins("http://localhost:64439")
+              .AllowCredentials()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 // Configure SQLite
 builder.Services.AddDbContext<DatabaseContext>(options =>
     options.UseSqlite(
@@ -39,6 +51,9 @@ using (var scope = app.Services.CreateScope())
     var phoneticDictionaryService = scope.ServiceProvider.GetRequiredService<PhoneticDictionaryService>();
     await phoneticDictionaryService.InitializeAsync();
 }
+
+// Enable CORS
+app.UseCors("AllowReactApp");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

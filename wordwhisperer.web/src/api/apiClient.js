@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create an Axios instance with default configuration
 const apiClient = axios.create({
-  baseURL: 'http://localhost:5104/api', // Updated to the correct port
+  baseURL: 'https://localhost:7295/api', // Updated to HTTPS and the correct port
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
