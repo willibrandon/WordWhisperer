@@ -7,6 +7,7 @@ using WordWhisperer.Core.Data;
 using WordWhisperer.Core.Interfaces;
 using WordWhisperer.Core.Services;
 using WordWhisperer.Core.Data.Models;
+using System.Runtime.InteropServices;
 
 // Create a host with services
 var builder = Host.CreateDefaultBuilder(args)
@@ -133,16 +134,16 @@ pronounceCommand.SetHandler(async (InvocationContext context) =>
         // Basic audio playback (will need platform-specific implementation)
         try
         {
-            // On Windows, you might use System.Media.SoundPlayer
-            // For cross-platform, you can use a command like this:
             var process = new System.Diagnostics.Process
             {
                 StartInfo = new System.Diagnostics.ProcessStartInfo
                 {
-                    FileName = Environment.OSVersion.Platform == PlatformID.Win32NT ? "powershell" : "play",
-                    Arguments = Environment.OSVersion.Platform == PlatformID.Win32NT 
-                        ? $"-c (New-Object System.Media.SoundPlayer '{audioPath}').PlaySync()" 
-                        : audioPath,
+                    FileName = RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "afplay" : 
+                              Environment.OSVersion.Platform == PlatformID.Win32NT ? "powershell" : "play",
+                    Arguments = RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? $"\"{audioPath}\"" :
+                              Environment.OSVersion.Platform == PlatformID.Win32NT ? 
+                              $"-c (New-Object System.Media.SoundPlayer '{audioPath}').PlaySync()" : 
+                              audioPath,
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
                     CreateNoWindow = true,

@@ -143,17 +143,37 @@ public class PronunciationService : IPronunciationService, IDisposable
         var fileName = GetAudioFileName(word, accent, slow);
         var filePath = Path.GetFullPath(Path.Combine(_audioCachePath, fileName));
 
-        // Initialize Piper with the correct model
-        await EnsureInitializedAsync(accent);
-
         try
         {
             // Create directory if it doesn't exist
             Directory.CreateDirectory(_audioCachePath);
 
-            // Generate audio using Piper
-            var audioData = await _piper!.InferAsync(word, AudioOutputType.Wav);
-            await File.WriteAllBytesAsync(filePath, audioData);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                // Use macOS say command
+                var process = new System.Diagnostics.Process
+                {
+                    StartInfo = new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = "say",
+                        Arguments = $"{(slow ? "-r 100 " : "")}-o \"{filePath}\" \"{word}\"",
+                        RedirectStandardOutput = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    }
+                };
+                process.Start();
+                await process.WaitForExitAsync();
+            }
+            else
+            {
+                // Initialize Piper with the correct model
+                await EnsureInitializedAsync(accent);
+
+                // Generate audio using Piper
+                var audioData = await _piper!.InferAsync(word, AudioOutputType.Wav);
+                await File.WriteAllBytesAsync(filePath, audioData);
+            }
 
             // Update database with new audio path
             var normalizedWord = word.ToLower();
@@ -162,11 +182,10 @@ public class PronunciationService : IPronunciationService, IDisposable
 
             if (wordEntry == null)
             {
-                // Create new word entry if it doesn't exist
                 wordEntry = new Word
                 {
                     WordText = word,
-                    AudioPath = accent == "american" ? filePath : null, // Store the full path
+                    AudioPath = accent == "american" ? filePath : null,
                     CreatedAt = DateTime.UtcNow,
                     LastAccessedAt = DateTime.UtcNow
                 };
@@ -176,7 +195,7 @@ public class PronunciationService : IPronunciationService, IDisposable
 
             if (accent == "american") // Default accent
             {
-                wordEntry.AudioPath = filePath; // Store the full path
+                wordEntry.AudioPath = filePath;
             }
             else
             {
@@ -189,13 +208,13 @@ public class PronunciationService : IPronunciationService, IDisposable
                     {
                         WordId = wordEntry.Id,
                         Variant = accent,
-                        AudioPath = filePath // Store the full path
+                        AudioPath = filePath
                     };
                     _db.WordVariants.Add(variant);
                 }
                 else
                 {
-                    variant.AudioPath = filePath; // Store the full path
+                    variant.AudioPath = filePath;
                 }
             }
 
@@ -241,7 +260,7 @@ public class PronunciationService : IPronunciationService, IDisposable
         // If the word is too long, use a hash instead
         string baseFileName = word.Length > 30 ? GetWordHash(word) : word;
         var speedSuffix = slow ? "_slow" : "";
-        return $"{baseFileName}_{accent}{speedSuffix}.wav";
+        return $"{baseFileName}_{accent}{speedSuffix}{(RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? ".aiff" : ".wav")}";
     }
 
     private static string GetWordHash(string word)
