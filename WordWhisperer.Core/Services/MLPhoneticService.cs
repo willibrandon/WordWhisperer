@@ -73,7 +73,8 @@ public class MLPhoneticService : IDisposable
         // First check the CMU dictionary for exact matches
         if (_cmuDictionary.TryGetValue(word, out var phonetics))
         {
-            return phonetics;
+            // Apply accent-specific modifications if needed
+            return ApplyAccentSpecificModifications(phonetics, accent);
         }
 
         // If word is not in dictionary, use ML model
@@ -102,7 +103,8 @@ public class MLPhoneticService : IDisposable
             // Generate simplified phonetics from IPA
             var simplified = SimplifyIpa(ipaOutput);
             
-            return (ipaOutput, simplified);
+            // Apply accent-specific modifications to the generated phonetics
+            return ApplyAccentSpecificModifications((ipaOutput, simplified), accent);
         }
         catch (Exception ex)
         {
@@ -432,6 +434,84 @@ public class MLPhoneticService : IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load character mappings");
+        }
+    }
+
+    /// <summary>
+    /// Apply accent-specific modifications to the phonetic output
+    /// </summary>
+    private (string ipa, string simplified) ApplyAccentSpecificModifications((string ipa, string simplified) phonetics, string accent)
+    {
+        string ipa = phonetics.ipa;
+        string simplified = phonetics.simplified;
+
+        switch (accent.ToLowerInvariant())
+        {
+            case "british":
+                // Convert rhotic "r" (post-vocalic) - common in American English
+                // but typically dropped in non-rhotic British accents
+                ipa = ipa.Replace("ɚ", "ə").Replace("ɝ", "ɜː");
+                
+                // Convert American diphthongs to British ones
+                ipa = ipa.Replace("oʊ", "əʊ");
+                
+                // Add yod before "u" in certain contexts (like "new")
+                ipa = AddYodBeforeU(ipa);
+                
+                // Adjust simplified notation
+                simplified = AccentAdjustSimplified(simplified, "british");
+                break;
+
+            case "australian":
+                // Australian specific changes 
+                // (subset of British with some unique characteristics)
+                ipa = ipa.Replace("oʊ", "əʊ");
+                
+                // Australian vowel shifts
+                ipa = ipa.Replace("æ", "æː");
+                
+                // Adjust simplified notation
+                simplified = AccentAdjustSimplified(simplified, "australian");
+                break;
+                
+            // Default is American - no specific changes needed
+        }
+
+        return (ipa, simplified);
+    }
+
+    /// <summary>
+    /// Add yod (j) sound before long u in British pronunciations
+    /// </summary>
+    private string AddYodBeforeU(string ipa)
+    {
+        // This is a simplified approach - would need more sophisticated
+        // phonological rules for a complete solution
+        return ipa
+            .Replace("ˈnu", "ˈnju")
+            .Replace("ˈtu", "ˈtju")
+            .Replace("ˈdu", "ˈdju");
+    }
+
+    /// <summary>
+    /// Adjust simplified phonetic notation for different accents
+    /// </summary>
+    private string AccentAdjustSimplified(string simplified, string accent)
+    {
+        switch (accent)
+        {
+            case "british":
+                // Adjust ou/ow sounds
+                simplified = simplified.Replace("-OW-", "-OH-");
+                simplified = simplified.Replace("-ow-", "-oh-");
+                return simplified;
+                
+            case "australian":
+                // Specific Australian adjustments
+                return simplified;
+                
+            default:
+                return simplified;
         }
     }
 
