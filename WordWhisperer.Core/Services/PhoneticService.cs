@@ -20,9 +20,10 @@ public class PhoneticService(
     public async Task<(string ipa, string simplified)?> GetOrGeneratePhoneticsAsync(string word, string accent)
     {
         // First, check if we have the phonetics in our database
+        var normalizedWord = word.ToLower(); // Normalize the word to lowercase
         var wordEntry = await db.Words
             .Include(w => w.Variants)
-            .FirstOrDefaultAsync(w => w.WordText.Equals(word, StringComparison.CurrentCultureIgnoreCase));
+            .FirstOrDefaultAsync(w => w.WordText.ToLower() == normalizedWord);
 
         if (wordEntry != null)
         {
@@ -125,9 +126,10 @@ public class PhoneticService(
 
     public async Task<bool> HasMultiplePronunciationsAsync(string word)
     {
+        var normalizedWord = word.ToLower();
         var wordEntry = await db.Words
             .Include(w => w.Variants)
-            .FirstOrDefaultAsync(w => w.WordText.Equals(word, StringComparison.CurrentCultureIgnoreCase));
+            .FirstOrDefaultAsync(w => w.WordText.ToLower() == normalizedWord);
 
         return wordEntry?.HasMultiplePron ?? false;
     }

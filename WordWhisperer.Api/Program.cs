@@ -95,10 +95,11 @@ app.MapGet("/api/pronunciation/{word}/audio", async (
     slow ??= false;
 
     var audioPath = await pronunciationService.GetOrGenerateAudioAsync(word, accent, slow.Value);
-    if (audioPath == null)
+    if (audioPath == null || !File.Exists(audioPath))
         return Results.NotFound();
 
-    return Results.File(audioPath, "audio/ogg");
+    // Serve the WAV file with the correct MIME type
+    return Results.File(audioPath, "audio/wav");
 })
 .WithName("GetWordAudio")
 .WithOpenApi();

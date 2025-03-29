@@ -407,3 +407,12 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Piper TTS files
+AudioCache/
+**/AudioCache/
+**/piper/
+**/models/
+*.onnx
+*.json
+*.wav
