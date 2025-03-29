@@ -82,8 +82,11 @@ public class PronunciationService : IPronunciationService, IDisposable
             if (!File.Exists(piperExePath))
             {
                 // Download and extract Piper if needed
-                var piperZip = PiperDownloader.DownloadPiper();
-                await piperZip.ExtractPiper(_piperPath);
+                var piperStream = await PiperDownloader.DownloadPiper(
+                    version: "2023.11.14-2",
+                    repo: "https://github.com/rhasspy/piper"
+                );
+                piperStream.ExtractPiper(_piperPath);
 
                 // On Linux, ensure proper permissions for both directory and executable
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -91,6 +94,12 @@ public class PronunciationService : IPronunciationService, IDisposable
                     await SetLinuxPermissionsAsync(piperDir, true);
                     await SetLinuxPermissionsAsync(piperExePath, false);
                 }
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                // Always ensure proper permissions on Linux, even if file exists
+                await SetLinuxPermissionsAsync(piperDir, true);
+                await SetLinuxPermissionsAsync(piperExePath, false);
             }
             
             // Create provider with paths that account for PiperSharp's piper subdirectory
