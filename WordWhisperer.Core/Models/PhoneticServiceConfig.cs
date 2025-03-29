@@ -13,12 +13,12 @@ public class PhoneticServiceConfig
     /// <summary>
     /// Path to the G2P ONNX model
     /// </summary>
-    public string ModelPath { get; set; } = "Data/Models/g2p_model.onnx";
+    public string ModelPath { get; set; } = "Data/MLModels/g2p_model.onnx";
     
     /// <summary>
     /// Path to the CMU dictionary file
     /// </summary>
-    public string CmuDictionaryPath { get; set; } = "Data/cmudict.txt";
+    public string CmuDictionaryPath { get; set; } = "Data/MLModels/cmudict.txt";
     
     /// <summary>
     /// Maximum word length for ML processing
