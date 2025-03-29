@@ -65,7 +65,8 @@ app.MapGet("/api/pronunciation/{word}", async (
     bool? slow,
     IPhoneticService phoneticService,
     IPronunciationService pronunciationService,
-    IDictionaryService dictionaryService) =>
+    IDictionaryService dictionaryService,
+    DatabaseContext db) =>
 {
     accent ??= "american";
     slow ??= false;
@@ -73,6 +74,31 @@ app.MapGet("/api/pronunciation/{word}", async (
     var phonetics = await phoneticService.GetOrGeneratePhoneticsAsync(word, accent);
     var audioPath = await pronunciationService.GetOrGenerateAudioAsync(word, accent, slow.Value);
     var (definition, partOfSpeech) = await dictionaryService.GetWordInfoAsync(word);
+
+    // Get or create word entry
+    var normalizedWord = word.ToLower();
+    var wordEntry = await db.Words.FirstOrDefaultAsync(w => w.WordText.ToLower() == normalizedWord);
+    if (wordEntry == null)
+    {
+        wordEntry = new Word
+        {
+            WordText = word,
+            CreatedAt = DateTime.UtcNow,
+            LastAccessedAt = DateTime.UtcNow
+        };
+        db.Words.Add(wordEntry);
+        await db.SaveChangesAsync();
+    }
+
+    // Add history entry
+    var historyEntry = new History
+    {
+        WordId = wordEntry.Id,
+        Timestamp = DateTime.UtcNow,
+        AccentUsed = accent
+    };
+    db.History.Add(historyEntry);
+    await db.SaveChangesAsync();
 
     return Results.Ok(new
     {
@@ -109,12 +135,38 @@ app.MapGet("/api/pronunciation/{word}/audio", async (
 app.MapGet("/api/pronunciation/{word}/phonetic", async (
     string word,
     string? accent,
-    IPhoneticService phoneticService) =>
+    IPhoneticService phoneticService,
+    DatabaseContext db) =>
 {
     accent ??= "american";
     var phonetics = await phoneticService.GetOrGeneratePhoneticsAsync(word, accent);
     if (phonetics == null)
         return Results.NotFound();
+
+    // Get or create word entry
+    var normalizedWord = word.ToLower();
+    var wordEntry = await db.Words.FirstOrDefaultAsync(w => w.WordText.ToLower() == normalizedWord);
+    if (wordEntry == null)
+    {
+        wordEntry = new Word
+        {
+            WordText = word,
+            CreatedAt = DateTime.UtcNow,
+            LastAccessedAt = DateTime.UtcNow
+        };
+        db.Words.Add(wordEntry);
+        await db.SaveChangesAsync();
+    }
+
+    // Add history entry
+    var historyEntry = new History
+    {
+        WordId = wordEntry.Id,
+        Timestamp = DateTime.UtcNow,
+        AccentUsed = accent
+    };
+    db.History.Add(historyEntry);
+    await db.SaveChangesAsync();
 
     return Results.Ok(new
     {
@@ -129,11 +181,37 @@ app.MapGet("/api/pronunciation/{word}/phonetic", async (
 
 app.MapGet("/api/pronunciation/{word}/definition", async (
     string word,
-    IDictionaryService dictionaryService) =>
+    IDictionaryService dictionaryService,
+    DatabaseContext db) =>
 {
     var (definition, partOfSpeech) = await dictionaryService.GetWordInfoAsync(word);
     if (definition == null)
         return Results.NotFound();
+
+    // Get or create word entry
+    var normalizedWord = word.ToLower();
+    var wordEntry = await db.Words.FirstOrDefaultAsync(w => w.WordText.ToLower() == normalizedWord);
+    if (wordEntry == null)
+    {
+        wordEntry = new Word
+        {
+            WordText = word,
+            CreatedAt = DateTime.UtcNow,
+            LastAccessedAt = DateTime.UtcNow
+        };
+        db.Words.Add(wordEntry);
+        await db.SaveChangesAsync();
+    }
+
+    // Add history entry
+    var historyEntry = new History
+    {
+        WordId = wordEntry.Id,
+        Timestamp = DateTime.UtcNow,
+        AccentUsed = "american" // Default accent for definition lookup
+    };
+    db.History.Add(historyEntry);
+    await db.SaveChangesAsync();
 
     return Results.Ok(new { definition, partOfSpeech });
 })
@@ -154,6 +232,13 @@ app.MapGet("/api/history", async (
         .OrderByDescending(h => h.Timestamp)
         .Skip((page.Value - 1) * pageSize.Value)
         .Take(pageSize.Value)
+        .Select(h => new
+        {
+            h.Id,
+            h.Timestamp,
+            h.AccentUsed,
+            Word = h.Word.WordText
+        })
         .ToListAsync();
 
     return Results.Ok(history);
@@ -171,6 +256,13 @@ app.MapGet("/api/history/recent", async (
         .Include(h => h.Word)
         .OrderByDescending(h => h.Timestamp)
         .Take(limit.Value)
+        .Select(h => new
+        {
+            h.Id,
+            h.Timestamp,
+            h.AccentUsed,
+            Word = h.Word.WordText
+        })
         .ToListAsync();
 
     return Results.Ok(recent);
