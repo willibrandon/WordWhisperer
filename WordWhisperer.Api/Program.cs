@@ -326,6 +326,14 @@ app.MapGet("/api/favorites", async (
         .OrderByDescending(f => f.AddedAt)
         .Skip((page.Value - 1) * pageSize.Value)
         .Take(pageSize.Value)
+        .Select(f => new
+        {
+            f.Id,
+            f.Notes,
+            f.Tags,
+            f.AddedAt,
+            Word = f.Word.WordText
+        })
         .ToListAsync();
 
     return Results.Ok(favorites);
