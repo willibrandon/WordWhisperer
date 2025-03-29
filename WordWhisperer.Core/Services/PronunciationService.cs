@@ -34,13 +34,49 @@ public class PronunciationService : IPronunciationService, IDisposable
         Directory.CreateDirectory(_audioCachePath);
     }
 
+    private async Task SetLinuxPermissionsAsync(string path, bool isDirectory)
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            return;
+
+        try
+        {
+            var process = new System.Diagnostics.Process
+            {
+                StartInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "chmod",
+                    // For directories we need rx permissions, for executables we need x permission
+                    Arguments = $"{(isDirectory ? "755" : "755")} \"{path}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+            process.Start();
+            await process.WaitForExitAsync();
+
+            if (process.ExitCode != 0)
+            {
+                var error = await process.StandardError.ReadToEndAsync();
+                throw new InvalidOperationException($"chmod failed with exit code {process.ExitCode}: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to set permissions on {path}: {ex.Message}");
+        }
+    }
+
     private async Task EnsureInitializedAsync(string accent)
     {
         if (_piper == null)
         {
             // Get the correct executable name based on platform
             string exeName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "piper.exe" : "piper";
-            string piperExePath = Path.Combine(_piperPath, "piper", exeName);
+            string piperDir = Path.Combine(_piperPath, "piper");
+            string piperExePath = Path.Combine(piperDir, exeName);
 
             // Only download and extract if Piper isn't already installed
             if (!File.Exists(piperExePath))
@@ -49,29 +85,11 @@ public class PronunciationService : IPronunciationService, IDisposable
                 var piperZip = PiperDownloader.DownloadPiper();
                 await piperZip.ExtractPiper(_piperPath);
 
-                // Set executable permissions on Linux only
+                // On Linux, ensure proper permissions for both directory and executable
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
-                    try
-                    {
-                        var process = new System.Diagnostics.Process
-                        {
-                            StartInfo = new System.Diagnostics.ProcessStartInfo
-                            {
-                                FileName = "chmod",
-                                Arguments = $"+x \"{piperExePath}\"",
-                                RedirectStandardOutput = true,
-                                UseShellExecute = false,
-                                CreateNoWindow = true
-                            }
-                        };
-                        process.Start();
-                        await process.WaitForExitAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new InvalidOperationException($"Failed to set executable permissions on Piper binary: {ex.Message}");
-                    }
+                    await SetLinuxPermissionsAsync(piperDir, true);
+                    await SetLinuxPermissionsAsync(piperExePath, false);
                 }
             }
             
@@ -79,7 +97,7 @@ public class PronunciationService : IPronunciationService, IDisposable
             _piper = new PiperProvider(new PiperConfiguration
             {
                 ExecutableLocation = piperExePath,
-                WorkingDirectory = Path.Combine(_piperPath, "piper")
+                WorkingDirectory = piperDir
             });
         }
 
