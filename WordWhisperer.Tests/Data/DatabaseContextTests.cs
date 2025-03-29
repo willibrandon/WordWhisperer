@@ -85,7 +85,7 @@ public class DatabaseContextTests : IDisposable
         // Assert
         var retrievedVariant = await _context.WordVariants
             .Include(v => v.Word)
-            .FirstOrDefaultAsync(v => v.Word.WordText == "tomato" && v.Variant == "British");
+            .FirstOrDefaultAsync(v => v.Word != null && v.Word.WordText == "tomato" && v.Variant == "British");
             
         Assert.NotNull(retrievedVariant);
         Assert.Equal("təˈmɑːtəʊ", retrievedVariant.Phonetic);

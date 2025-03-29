@@ -104,10 +104,10 @@ pronounceCommand.SetHandler(async (InvocationContext context) =>
     }
 
     // Add history entry
-    await userDataService.AddToHistoryAsync(wordEntity.Id, accent);
+    await userDataService.AddToHistoryAsync(wordEntity.Id, accent ?? "american");
 
     // Get phonetics
-    var phonetics = await phoneticService.GetOrGeneratePhoneticsAsync(word, accent);
+    var phonetics = await phoneticService.GetOrGeneratePhoneticsAsync(word, accent ?? "american");
     if (phonetics != null)
     {
         Console.ForegroundColor = ConsoleColor.Cyan;
@@ -124,7 +124,7 @@ pronounceCommand.SetHandler(async (InvocationContext context) =>
     }
 
     // Generate and play audio
-    var audioPath = await pronunciationService.GetOrGenerateAudioAsync(word, accent, slow);
+    var audioPath = await pronunciationService.GetOrGenerateAudioAsync(word, accent ?? "american", slow);
     if (audioPath != null)
     {
         Console.WriteLine($"Audio available at: {audioPath}");
@@ -169,7 +169,7 @@ pronounceCommand.SetHandler(async (InvocationContext context) =>
     if (withDefinition)
     {
         var wordInfo = await dictionaryService.GetWordInfoAsync(word);
-        string definition = wordInfo.Item1;
+        string definition = wordInfo.Item1 ?? string.Empty;
         string? partOfSpeech = wordInfo.Item2;
         
         if (!string.IsNullOrEmpty(definition))
@@ -230,10 +230,10 @@ phoneticCommand.SetHandler(async (InvocationContext context) =>
     }
 
     // Add history entry
-    await userDataService.AddToHistoryAsync(wordEntity.Id, accent);
+    await userDataService.AddToHistoryAsync(wordEntity.Id, accent ?? "american");
 
     // Get phonetics
-    var phonetics = await phoneticService.GetOrGeneratePhoneticsAsync(word, accent);
+    var phonetics = await phoneticService.GetOrGeneratePhoneticsAsync(word, accent ?? "american");
     if (phonetics != null)
     {
         Console.WriteLine($"Word: {word}");
@@ -294,7 +294,7 @@ defineCommand.SetHandler(async (InvocationContext context) =>
 
     // Get definition
     var wordInfo = await dictionaryService.GetWordInfoAsync(word);
-    string definition = wordInfo.Item1;
+    string definition = wordInfo.Item1 ?? string.Empty;
     string? partOfSpeech = wordInfo.Item2;
     
     Console.WriteLine($"Word: {word}");

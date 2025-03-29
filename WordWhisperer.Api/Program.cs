@@ -251,7 +251,7 @@ app.MapGet("/api/history", async (
             h.Id,
             h.Timestamp,
             h.AccentUsed,
-            Word = h.Word.WordText
+            Word = h.Word != null ? h.Word.WordText : "Unknown"
         })
         .ToListAsync();
 
@@ -275,7 +275,7 @@ app.MapGet("/api/history/recent", async (
             h.Id,
             h.Timestamp,
             h.AccentUsed,
-            Word = h.Word.WordText
+            Word = h.Word != null ? h.Word.WordText : "Unknown"
         })
         .ToListAsync();
 
@@ -332,7 +332,7 @@ app.MapGet("/api/favorites", async (
             f.Notes,
             f.Tags,
             f.AddedAt,
-            Word = f.Word.WordText
+            Word = f.Word != null ? f.Word.WordText : "Unknown"
         })
         .ToListAsync();
 
