@@ -50,7 +50,7 @@ var pronounceCommand = new Command("pronounce", "Pronounce a word and display it
 var wordArgument = new Argument<string>("word", "The word to pronounce");
 var accentOption = new Option<string>(
     aliases: new[] { "--accent", "-a" },
-    description: "Accent to use (american, british, australian)",
+    description: "Accent to use (american, british)",
     getDefaultValue: () => "american");
 var slowOption = new Option<bool>(
     aliases: new[] { "--slow", "-s" },
