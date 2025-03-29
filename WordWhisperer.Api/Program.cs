@@ -34,8 +34,10 @@ var app = builder.Build();
 // Initialize the phonetic dictionary
 using (var scope = app.Services.CreateScope())
 {
-    var dictionaryService = scope.ServiceProvider.GetRequiredService<PhoneticDictionaryService>();
+    var dictionaryService = scope.ServiceProvider.GetRequiredService<IDictionaryService>();
     await dictionaryService.InitializeAsync();
+    var phoneticDictionaryService = scope.ServiceProvider.GetRequiredService<PhoneticDictionaryService>();
+    await phoneticDictionaryService.InitializeAsync();
 }
 
 // Configure the HTTP request pipeline.
@@ -114,7 +116,13 @@ app.MapGet("/api/pronunciation/{word}/phonetic", async (
     if (phonetics == null)
         return Results.NotFound();
 
-    return Results.Ok(phonetics);
+    return Results.Ok(new
+    {
+        word,
+        accent,
+        ipa = phonetics.Value.ipa,
+        simplified = phonetics.Value.simplified
+    });
 })
 .WithName("GetWordPhonetics")
 .WithOpenApi();
