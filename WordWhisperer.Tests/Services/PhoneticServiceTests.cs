@@ -56,62 +56,16 @@ public class PhoneticServiceTests : IDisposable
         var entriesField = typeof(PhoneticDictionaryService)
             .GetField("_entries", BindingFlags.NonPublic | BindingFlags.Instance);
             
-        var rulesField = typeof(PhoneticDictionaryService)
-            .GetField("_rules", BindingFlags.NonPublic | BindingFlags.Instance);
-            
         if (entriesField != null)
         {
-            var entries = new Dictionary<string, PhoneticEntry>
+            var entries = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                ["hello"] = new PhoneticEntry
-                {
-                    Ipa = "həˈloʊ",
-                    Simplified = "huh-LOW"
-                },
-                ["sample"] = new PhoneticEntry
-                {
-                    Ipa = "ˈsæmpəl",
-                    Simplified = "SAM-puhl"
-                },
-                ["newword"] = new PhoneticEntry
-                {
-                    Ipa = "ˈnuːwɜːd",
-                    Simplified = "NOO-werd"
-                }
+                ["hello"] = "HH AH0 L OW1",
+                ["sample"] = "S AE1 M P AH0 L",
+                ["newword"] = "N UW1 W ER2 D"
             };
             
             entriesField.SetValue(_dictionaryService, entries);
-        }
-        
-        if (rulesField != null)
-        {
-            var rules = new PhoneticRules
-            {
-                Vowels = new Dictionary<string, VowelRule>
-                {
-                    ["a"] = new VowelRule
-                    {
-                        Default = "æ",
-                        Simplified = "a",
-                        Contexts = new Dictionary<string, string>()
-                    }
-                },
-                Consonants = new Dictionary<string, ConsonantRule>
-                {
-                    ["th"] = new ConsonantRule
-                    {
-                        Default = "θ",
-                        Simplified = "th"
-                    }
-                },
-                StressPatterns = new StressPatterns
-                {
-                    NounTwoSyllable = new[] { 1, 0 },
-                    ThreeSyllable = new[] { 1, 0, 0 }
-                }
-            };
-            
-            rulesField.SetValue(_dictionaryService, rules);
         }
     }
 
