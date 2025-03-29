@@ -25,14 +25,17 @@ public class PhoneticDictionaryService(ILogger<PhoneticDictionaryService> logger
                 if (string.IsNullOrWhiteSpace(line) || line.StartsWith(";;;"))
                     continue;
 
-                var parts = line.Split("  ", 2, StringSplitOptions.RemoveEmptyEntries);
-                if (parts.Length != 2)
+                // Split on any number of spaces and remove empty entries
+                var parts = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 2)  // Need at least a word and one phoneme
                     continue;
 
                 var word = parts[0].ToLowerInvariant();
                 // Remove the variant number if present (e.g., "WORD(2)" becomes "WORD")
                 word = word.Split('(')[0];
-                var phonemes = parts[1].Trim();
+                
+                // Join all remaining parts as the pronunciation
+                var phonemes = string.Join(" ", parts.Skip(1));
 
                 _entries[word] = phonemes;
             }
