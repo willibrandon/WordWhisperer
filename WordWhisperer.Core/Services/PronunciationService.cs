@@ -48,6 +48,31 @@ public class PronunciationService : IPronunciationService, IDisposable
                 // Download and extract Piper if needed
                 var piperZip = PiperDownloader.DownloadPiper();
                 await piperZip.ExtractPiper(_piperPath);
+
+                // Set executable permissions on Linux only
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    try
+                    {
+                        var process = new System.Diagnostics.Process
+                        {
+                            StartInfo = new System.Diagnostics.ProcessStartInfo
+                            {
+                                FileName = "chmod",
+                                Arguments = $"+x \"{piperExePath}\"",
+                                RedirectStandardOutput = true,
+                                UseShellExecute = false,
+                                CreateNoWindow = true
+                            }
+                        };
+                        process.Start();
+                        await process.WaitForExitAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new InvalidOperationException($"Failed to set executable permissions on Piper binary: {ex.Message}");
+                    }
+                }
             }
             
             // Create provider with paths that account for PiperSharp's piper subdirectory
