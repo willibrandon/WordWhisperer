@@ -11,8 +11,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WordWhisperer.Core", "WordW
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WordWhisperer.Tests", "WordWhisperer.Tests\WordWhisperer.Tests.csproj", "{41F8871C-08B2-46DB-8899-A9A90B42AF97}"
 EndProject
-Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "wordwhisperer.web", "wordwhisperer.web\wordwhisperer.web.esproj", "{996D1972-35CA-54DC-E390-EAA173F0CE28}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,12 +33,6 @@ Global
 		{41F8871C-08B2-46DB-8899-A9A90B42AF97}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{41F8871C-08B2-46DB-8899-A9A90B42AF97}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{41F8871C-08B2-46DB-8899-A9A90B42AF97}.Release|Any CPU.Build.0 = Release|Any CPU
-		{996D1972-35CA-54DC-E390-EAA173F0CE28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{996D1972-35CA-54DC-E390-EAA173F0CE28}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{996D1972-35CA-54DC-E390-EAA173F0CE28}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
-		{996D1972-35CA-54DC-E390-EAA173F0CE28}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{996D1972-35CA-54DC-E390-EAA173F0CE28}.Release|Any CPU.Build.0 = Release|Any CPU
-		{996D1972-35CA-54DC-E390-EAA173F0CE28}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
